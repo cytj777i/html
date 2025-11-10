@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pikon Script | 代码复制工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0a0a2a, #000015);
+            color: #e0e0ff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            padding: 30px;
+            background: rgba(10, 15, 40, 0.7);
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0, 100, 255, 0.3);
+            border: 1px solid rgba(0, 150, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 100, 255, 0.1) 0%, transparent 70%);
+            z-index: -1;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 2.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 15px rgba(0, 150, 255, 0.5);
+            position: relative;
+        }
+        
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            border-radius: 3px;
+        }
+        
+        .code-container {
+            background: rgba(5, 10, 30, 0.8);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 25px 0;
+            border: 1px solid rgba(0, 150, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .code-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent 30%, rgba(0, 150, 255, 0.05) 50%, transparent 70%);
+            animation: shimmer 3s infinite linear;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .code-content {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #b3e0ff;
+            white-space: pre-wrap;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            position: relative;
+        }
+        
+        .copy-btn {
+            background: linear-gradient(45deg, #0066ff, #0099ff);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 102, 255, 0.4);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            z-index: 10;
+        }
+        
+        .copy-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 102, 255, 0.6);
+        }
+        
+        .copy-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 3px 10px rgba(0, 102, 255, 0.4);
+        }
+        
+        .copy-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.2) 50%, transparent 70%);
+            transform: translateX(-100%);
+        }
+        
+        .copy-btn:hover::after {
+            animation: btn-shine 1.5s ease;
+        }
+        
+        @keyframes btn-shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        /* 粒子特效 */
+        .particles-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #4facfe;
+            border-radius: 50%;
+            pointer-events: none;
+            opacity: 0;
+        }
+        
+        @keyframes particle-explode {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty)) scale(0);
+                opacity: 0;
+            }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(45deg, #0066ff, #0099ff);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transform: translateX(150%);
+            transition: transform 0.4s ease;
+            z-index: 1000;
+            font-weight: bold;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .background-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        .background-particle {
+            position: absolute;
+            background: rgba(0, 150, 255, 0.5);
+            border-radius: 50%;
+            animation: float 15s infinite linear;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: rgba(200, 220, 255, 0.6);
+        }
+        
+        /* 隐藏的文本区域用于复制 */
+        #copyTextarea {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 2em;
+            height: 2em;
+            padding: 0;
+            border: none;
+            outline: none;
+            box-shadow: none;
+            background: transparent;
+            opacity: 0;
+            z-index: -1;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .code-content {
+                font-size: 12px;
+            }
+            
+            .copy-btn {
+                padding: 12px 30px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-particles" id="backgroundParticles"></div>
+    
+    <div class="container">
+        <h1>Pikon Script</h1>
+        
+        <div class="code-container">
+            <div class="code-content">Pikon_script = "司空，皮炎制作"
+loadstring(game:HttpGet("https://raw.githubusercontent.com/smalldesikon/eyidfki/840d4b80d4f312c70b7b1067e056a2c4f828ef32/%E6%89%A7%E8%A1%8C%E8%84%9A%E6%9C%AC(%E6%B7%B7%E6%B7%86%E5%90%8E).txt"))()--卡密：皮空脚本垃圾</div>
+        </div>
+        
+        <div class="btn-container">
+            <button class="copy-btn" id="copyBtn">复制代码</button>
+            <div class="particles-container" id="particlesContainer"></div>
+        </div>
+        
+        <!-- 隐藏的文本区域用于复制 -->
+        <textarea id="copyTextarea"></textarea>
+    </div>
+    
+    <div class="footer">
+        <p>由XTTT使用91Deep seek制作</p>
+    </div>
+    
+    <div class="notification" id="notification">代码已成功复制到剪贴板！</div>
+
+    <script>
+        // 创建背景粒子效果
+        function createBackgroundParticles() {
+            const particlesContainer = document.getElementById('backgroundParticles');
+            const particleCount = 30;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('background-particle');
+                
+                // 随机大小和位置
+                const size = Math.random() * 5 + 2;
+                const left = Math.random() * 100;
+                const delay = Math.random() * 15;
+                const duration = Math.random() * 10 + 10;
+                
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.left = `${left}vw`;
+                particle.style.animationDelay = `${delay}s`;
+                particle.style.animationDuration = `${duration}s`;
+                
+                particlesContainer.appendChild(particle);
+            }
+        }
+        
+        // 创建粒子爆炸效果
+        function createParticleExplosion(x, y) {
+            const container = document.getElementById('particlesContainer');
+            const particleCount = 20;
+            
+            // 清除之前的粒子
+            container.innerHTML = '';
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                // 随机角度和距离
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 50 + Math.random() * 100;
+                const tx = Math.cos(angle) * distance;
+                const ty = Math.sin(angle) * distance;
+                
+                // 设置粒子位置
+                particle.style.left = `${x}px`;
+                particle.style.top = `${y}px`;
+                
+                // 设置CSS变量用于动画
+                particle.style.setProperty('--tx', `${tx}px`);
+                particle.style.setProperty('--ty', `${ty}px`);
+                
+                // 随机大小和颜色变化
+                const size = 4 + Math.random() * 4;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                
+                // 随机颜色
+                const hue = 200 + Math.random() * 40;
+                particle.style.background = `hsl(${hue}, 100%, 65%)`;
+                
+                // 设置动画
+                const duration = 0.6 + Math.random() * 0.4;
+                particle.style.animation = `particle-explode ${duration}s ease-out forwards`;
+                
+                container.appendChild(particle);
+                
+                // 动画结束后移除粒子
+                setTimeout(() => {
+                    if (particle.parentNode === container) {
+                        container.removeChild(particle);
+                    }
+                }, duration * 1000);
+            }
+        }
+        
+        // 复制功能 - 使用多种方法确保成功
+        function copyToClipboard(event) {
+            const code = `Pikon_script = "司空，皮炎制作"
+loadstring(game:HttpGet("https://raw.githubusercontent.com/smalldesikon/eyidfki/840d4b80d4f312c70b7b1067e056a2c4f828ef32/%E6%89%A7%E8%A1%8C%E8%84%9A%E6%9C%AC(%E6%B7%B7%E6%B7%86%E5%90%8E).txt"))()--卡密：皮空脚本垃圾`;
+            
+            // 获取按钮位置
+            const rect = event.currentTarget.getBoundingClientRect();
+            const x = rect.width / 2;
+            const y = rect.height / 2;
+            
+            // 方法1: 使用现代Clipboard API
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(code).then(() => {
+                    // 创建粒子爆炸效果
+                    createParticleExplosion(x, y);
+                    showNotification('代码已成功复制到剪贴板！');
+                }).catch(err => {
+                    console.error('Clipboard API 失败:', err);
+                    // 如果现代API失败，使用传统方法
+                    fallbackCopyTextToClipboard(code, x, y);
+                });
+            } else {
+                // 如果不支持现代API，使用传统方法
+                fallbackCopyTextToClipboard(code, x, y);
+            }
+        }
+        
+        // 传统复制方法
+        function fallbackCopyTextToClipboard(text, x, y) {
+            const textArea = document.getElementById('copyTextarea');
+            textArea.value = text;
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    // 创建粒子爆炸效果
+                    createParticleExplosion(x, y);
+                    showNotification('代码已成功复制到剪贴板！');
+                } else {
+                    showNotification('复制失败，请手动选择代码进行复制。');
+                }
+            } catch (err) {
+                console.error('传统复制方法失败:', err);
+                showNotification('复制失败，请手动选择代码进行复制。');
+            }
+        }
+        
+        // 显示通知
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            createBackgroundParticles();
+            
+            const copyBtn = document.getElementById('copyBtn');
+            copyBtn.addEventListener('click', copyToClipboard);
+        });
+    </script>
+</body>
+</html>
