@@ -2,8 +2,8 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>火车头脚本中心</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>火车头脚本中心 · 代码视界</title>
     <style>
         * {
             margin: 0;
@@ -28,6 +28,10 @@
             font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
             overflow-x: hidden;
             color: #fff;
+        }
+
+        body.modal-open {
+            overflow: hidden;
         }
 
         #particles-canvas {
@@ -266,6 +270,7 @@
             backdrop-filter: blur(10px);
             text-transform: uppercase;
             letter-spacing: 3px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
         }
 
         .cyber-button::before {
@@ -586,6 +591,7 @@
             margin-top: 5px;
         }
 
+        /* ---------- 全局提示 (成功/失败) ---------- */
         .copy-toast {
             position: fixed;
             top: 50%;
@@ -594,12 +600,19 @@
             background: linear-gradient(135deg, rgba(34, 197, 94, 0.95) 0%, rgba(22, 163, 74, 0.95) 100%);
             backdrop-filter: blur(20px);
             border: 2px solid rgba(34, 197, 94, 0.5);
-            border-radius: 20px;
-            padding: 25px 50px;
+            border-radius: 60px;
+            padding: 22px 45px;
             z-index: 10000;
             opacity: 0;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             pointer-events: none;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 30px #22c55e55;
+        }
+
+        .copy-toast.error {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.95) 0%, rgba(185, 28, 28, 0.95) 100%);
+            border: 2px solid rgba(239, 68, 68, 0.6);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 30px #ef444488;
         }
 
         .copy-toast.show {
@@ -624,17 +637,19 @@
         }
 
         .copy-toast-icon svg {
-            width: 24px;
-            height: 24px;
+            width: 26px;
+            height: 26px;
             fill: #fff;
         }
 
         .copy-toast-text {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             font-weight: 700;
             color: #fff;
+            letter-spacing: 1px;
         }
 
+        /* 点击涟漪等效果 */
         .click-effect {
             position: fixed;
             pointer-events: none;
@@ -735,23 +750,6 @@
             animation: counterJump 0.3s ease;
         }
 
-        .pulse-ring {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 100%;
-            height: 100%;
-            border: 2px solid rgba(0, 212, 255, 0.3);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            animation: pulseRing 2s ease-out infinite;
-        }
-
-        @keyframes pulseRing {
-            0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-            100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
-        }
-
         .online-indicator {
             display: inline-flex;
             align-items: center;
@@ -791,32 +789,140 @@
             margin-left: 10px;
         }
 
+        /* 模态框 (代码视界) */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 8, 22, 0.8);
+            backdrop-filter: blur(12px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.25s ease;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-container {
+            position: relative;
+            max-width: 700px;
+            width: 100%;
+            padding: 30px 25px 25px;
+            border-radius: 28px;
+            background: linear-gradient(145deg, rgba(20, 30, 60, 0.9) 0%, rgba(10, 15, 35, 0.95) 100%);
+            border: 1.5px solid rgba(0, 212, 255, 0.3);
+            box-shadow: 0 30px 50px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,212,255,0.1) inset;
+            backdrop-filter: blur(20px);
+            transform: scale(0.98);
+            transition: transform 0.25s cubic-bezier(0.2,0.9,0.4,1);
+        }
+
+        .modal-overlay.show .modal-container {
+            transform: scale(1);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 50%;
+            color: #a0c0ff;
+            font-size: 28px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(5px);
+            z-index: 5;
+        }
+
+        .modal-close:hover {
+            background: rgba(0, 212, 255, 0.25);
+            border-color: #00d4ff;
+            color: white;
+            transform: rotate(90deg);
+        }
+
+        .modal-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            padding-right: 30px;
+            background: linear-gradient(135deg, #b0e0ff, #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 1px;
+            text-shadow: 0 0 15px #0066ff;
+        }
+
+        .code-block {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 18px;
+            padding: 20px 18px;
+            margin-bottom: 30px;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.5), 0 8px 0 rgba(0,0,0,0.3);
+            backdrop-filter: blur(4px);
+        }
+
+        .code-block pre {
+            margin: 0;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #b3f0ff;
+            white-space: pre-wrap;
+            word-break: break-all;
+            text-shadow: 0 0 5px #00a6ff;
+            user-select: text;
+            cursor: text;
+        }
+
+        .modal-copy-btn {
+            width: 100%;
+            justify-content: center;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.4rem;
+            padding: 18px 20px;
+            border-radius: 50px;
+            background: linear-gradient(145deg, #0044cc20, #6d28d930);
+            border: 2px solid #00d4ff;
+            box-shadow: 0 0 25px #0066ff66;
+        }
+
+        .modal-copy-btn .button-icon {
+            font-size: 1.8rem;
+            margin-right: 8px;
+        }
+
         @media (max-width: 768px) {
-            .logo {
-                font-size: 2.5rem;
-            }
-
-            .stats-bar {
-                gap: 30px;
-            }
-
-            .main-buttons {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .cyber-button {
-                width: 100%;
-                max-width: 300px;
-            }
-
-            .content-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .stat-item::after {
-                display: none;
-            }
+            .logo { font-size: 2.5rem; }
+            .stats-bar { gap: 30px; }
+            .main-buttons { flex-direction: column; align-items: center; }
+            .cyber-button { width: 100%; max-width: 300px; }
+            .content-grid { grid-template-columns: 1fr; }
+            .stat-item::after { display: none; }
+            .modal-container { padding: 25px 18px 20px; }
+            .modal-title { font-size: 1.8rem; }
+            .code-block pre { font-size: 0.95rem; }
         }
     </style>
 </head>
@@ -932,7 +1038,7 @@
                         <div class="step-number">2</div>
                         <div class="step-content">
                             <div class="step-title">复制脚本</div>
-                            <div class="step-desc">点击复制按钮获取脚本代码</div>
+                            <div class="step-desc">点击「脚本」按钮查看并复制代码</div>
                         </div>
                     </div>
                     <div class="step">
@@ -971,7 +1077,7 @@
                         <div class="notice-dot"></div>
                         <div class="notice-content">
                             <div class="notice-text">新用户建议先阅读使用教程</div>
-                            <div class="notice-time">2026-04-022 08:00</div>
+                            <div class="notice-time">2026-04-22 08:00</div>
                         </div>
                     </div>
                 </div>
@@ -983,258 +1089,300 @@
         </footer>
     </div>
 
-    <div class="copy-toast" id="copyToast">
+    <!-- 代码模态框 -->
+    <div class="modal-overlay" id="scriptModal">
+        <div class="modal-container glass-panel">
+            <button class="modal-close" id="closeModalBtn" aria-label="关闭">&times;</button>
+            <h3 class="modal-title">⚡ 脚本源代码</h3>
+            <div class="code-block">
+                <pre id="scriptCodeDisplay">loadstring(game:HttpGet("https://raw.githubusercontent.com/Wbw1470619303-ctrl/w-/refs/heads/main/wutou_w"))()</pre>
+            </div>
+            <button class="cyber-button primary modal-copy-btn" id="modalCopyBtn">
+                <span class="button-glow"></span>
+                <span class="button-click-effect"></span>
+                <span class="wave-burst"></span>
+                <span class="button-icon">📋</span>
+                复制脚本
+            </button>
+        </div>
+    </div>
+
+    <!-- 全局提示 (支持成功/错误) -->
+    <div class="copy-toast" id="globalToast">
         <div class="copy-toast-content">
-            <div class="copy-toast-icon">
+            <div class="copy-toast-icon" id="toastIcon">
                 <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
             </div>
-            <span class="copy-toast-text">复制成功</span>
+            <span class="copy-toast-text" id="toastMessage">复制成功</span>
         </div>
     </div>
 
     <script>
-        // Particle System
-        const canvas = document.getElementById('particles-canvas');
-        const ctx = canvas.getContext('2d');
-        let particles = [];
-        let mouseX = 0;
-        let mouseY = 0;
+        (function(){
+            "use strict";
 
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
+            // ---------- 粒子系统 ----------
+            const canvas = document.getElementById('particles-canvas');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            let mouseX = 0, mouseY = 0;
+            let animationTime = 0;
 
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
 
-        class Particle {
-            constructor() {
-                this.reset();
+            class Particle {
+                constructor() {
+                    this.reset();
+                }
+                reset() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.size = Math.random() * 3 + 1;
+                    this.speedX = (Math.random() - 0.5) * 0.5;
+                    this.speedY = (Math.random() - 0.5) * 0.5;
+                    this.opacity = Math.random() * 0.5 + 0.2;
+                    this.hue = Math.random() * 60 + 180;
+                    this.pulseSpeed = Math.random() * 0.02 + 0.01;
+                    this.pulseOffset = Math.random() * Math.PI * 2;
+                }
+                update(time) {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+                    if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+                    this.opacity = 0.3 + Math.sin(time * this.pulseSpeed + this.pulseOffset) * 0.3;
+                }
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fillStyle = `hsla(${this.hue}, 100%, 60%, ${this.opacity})`;
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = `hsla(${this.hue}, 100%, 60%, ${this.opacity})`;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
             }
 
-            reset() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 3 + 1;
-                this.speedX = (Math.random() - 0.5) * 0.5;
-                this.speedY = (Math.random() - 0.5) * 0.5;
-                this.opacity = Math.random() * 0.5 + 0.2;
-                this.hue = Math.random() * 60 + 180; // Blue-cyan range
-                this.pulseSpeed = Math.random() * 0.02 + 0.01;
-                this.pulseOffset = Math.random() * Math.PI * 2;
-            }
+            const particleCount = Math.min(150, Math.floor((canvas.width * canvas.height) / 10000));
+            for (let i = 0; i < particleCount; i++) particles.push(new Particle());
 
-            update(time) {
-                this.x += this.speedX;
-                this.y += this.speedY;
-
-                if (this.x < 0 || this.x > canvas.width) this.speedX *= -1;
-                if (this.y < 0 || this.y > canvas.height) this.speedY *= -1;
-
-                this.opacity = 0.3 + Math.sin(time * this.pulseSpeed + this.pulseOffset) * 0.3;
-            }
-
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fillStyle = `hsla(${this.hue}, 100%, 60%, ${this.opacity})`;
-                ctx.shadowBlur = 15;
-                ctx.shadowColor = `hsla(${this.hue}, 100%, 60%, ${this.opacity})`;
-                ctx.fill();
-                ctx.shadowBlur = 0;
-            }
-        }
-
-        // Initialize particles
-        const particleCount = Math.min(150, Math.floor((canvas.width * canvas.height) / 10000));
-        for (let i = 0; i < particleCount; i++) {
-            particles.push(new Particle());
-        }
-
-        function drawConnections() {
-            for (let i = 0; i < particles.length; i++) {
-                for (let j = i + 1; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x;
-                    const dy = particles[i].y - particles[j].y;
+            function drawConnections() {
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance < 150) {
+                            const opacity = (1 - distance / 150) * 0.2;
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(0, 212, 255, ${opacity})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.stroke();
+                        }
+                    }
+                    const dx = particles[i].x - mouseX;
+                    const dy = particles[i].y - mouseY;
                     const distance = Math.sqrt(dx * dx + dy * dy);
-
-                    if (distance < 150) {
-                        const opacity = (1 - distance / 150) * 0.2;
+                    if (distance < 200) {
+                        const opacity = (1 - distance / 200) * 0.3;
                         ctx.beginPath();
                         ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.strokeStyle = `rgba(0, 212, 255, ${opacity})`;
-                        ctx.lineWidth = 0.5;
+                        ctx.lineTo(mouseX, mouseY);
+                        ctx.strokeStyle = `rgba(0, 255, 255, ${opacity})`;
+                        ctx.lineWidth = 1;
                         ctx.stroke();
                     }
                 }
+            }
 
-                // Connect to mouse
-                const dx = particles[i].x - mouseX;
-                const dy = particles[i].y - mouseY;
-                const distance = Math.sqrt(dx * dx + dy * dy);
+            function animateParticles() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                animationTime += 0.016;
+                particles.forEach(p => { p.update(animationTime); p.draw(); });
+                drawConnections();
+                requestAnimationFrame(animateParticles);
+            }
+            animateParticles();
 
-                if (distance < 200) {
-                    const opacity = (1 - distance / 200) * 0.3;
-                    ctx.beginPath();
-                    ctx.moveTo(particles[i].x, particles[i].y);
-                    ctx.lineTo(mouseX, mouseY);
-                    ctx.strokeStyle = `rgba(0, 255, 255, ${opacity})`;
-                    ctx.lineWidth = 1;
-                    ctx.stroke();
+            document.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY; });
+
+            // 点击涟漪
+            function createClickEffect(x, y) {
+                const ripple = document.createElement('div');
+                ripple.className = 'click-effect';
+                ripple.innerHTML = '<div class="ripple" style="width: 100px; height: 100px;"></div>';
+                ripple.style.left = x + 'px';
+                ripple.style.top = y + 'px';
+                document.body.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 800);
+
+                for (let i = 0; i < 12; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'click-effect particle-burst';
+                    const angle = (i / 12) * Math.PI * 2;
+                    const distance = 80 + Math.random() * 40;
+                    const tx = Math.cos(angle) * distance + 'px';
+                    const ty = Math.sin(angle) * distance + 'px';
+                    particle.style.cssText = `left:${x}px; top:${y}px; --tx:${tx}; --ty:${ty}; background:hsl(${180+Math.random()*40},100%,60%);`;
+                    document.body.appendChild(particle);
+                    setTimeout(() => particle.remove(), 800);
                 }
             }
-        }
+            document.addEventListener('click', (e) => { createClickEffect(e.clientX, e.clientY); });
 
-        let animationTime = 0;
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            animationTime += 0.016;
-
-            particles.forEach(particle => {
-                particle.update(animationTime);
-                particle.draw();
-            });
-
-            drawConnections();
-            requestAnimationFrame(animate);
-        }
-
-        animate();
-
-        document.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-        });
-
-        // Click Effects
-        function createClickEffect(x, y) {
-            // Ripple effect
-            const ripple = document.createElement('div');
-            ripple.className = 'click-effect';
-            ripple.innerHTML = '<div class="ripple" style="width: 100px; height: 100px;"></div>';
-            ripple.style.left = x + 'px';
-            ripple.style.top = y + 'px';
-            document.body.appendChild(ripple);
-            setTimeout(() => ripple.remove(), 800);
-
-            // Particle burst
-            const particleCount = 12;
-            for (let i = 0; i < particleCount; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'click-effect particle-burst';
-                const angle = (i / particleCount) * Math.PI * 2;
-                const distance = 80 + Math.random() * 40;
-                const tx = Math.cos(angle) * distance + 'px';
-                const ty = Math.sin(angle) * distance + 'px';
-                particle.style.cssText = `
-                    left: ${x}px;
-                    top: ${y}px;
-                    --tx: ${tx};
-                    --ty: ${ty};
-                    background: hsl(${180 + Math.random() * 40}, 100%, 60%);
-                    box-shadow: 0 0 10px currentColor;
-                `;
-                document.body.appendChild(particle);
-                setTimeout(() => particle.remove(), 800);
-            }
-        }
-
-        document.addEventListener('click', (e) => {
-            createClickEffect(e.clientX, e.clientY);
-        });
-
-        // Counter Animation
-        function animateCounter(element, target, duration = 2000) {
-            const start = 0;
-            const startTime = performance.now();
-
-            function update(currentTime) {
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                const easeProgress = 1 - Math.pow(1 - progress, 3);
-                const current = Math.floor(start + (target - start) * easeProgress);
-
-                element.textContent = current.toLocaleString();
-
-                if (progress < 1) {
-                    requestAnimationFrame(update);
+            // 计数器动画
+            function animateCounter(el, target, duration=2000) {
+                const start = 0;
+                const startTime = performance.now();
+                function update(now) {
+                    const progress = Math.min((now - startTime) / duration, 1);
+                    const val = Math.floor(start + (target - start) * (1 - Math.pow(1 - progress, 3)));
+                    el.textContent = val.toLocaleString();
+                    if (progress < 1) requestAnimationFrame(update);
                 }
+                requestAnimationFrame(update);
             }
+            setTimeout(() => {
+                animateCounter(document.getElementById('userCount'), 12847, 2500);
+                animateCounter(document.getElementById('onlineCount'), 342, 2000);
+                animateCounter(document.getElementById('runCount'), 985632, 3000);
+            }, 500);
 
-            requestAnimationFrame(update);
-        }
-
-        // Initialize counters
-        setTimeout(() => {
-            animateCounter(document.getElementById('userCount'), 12847, 2500);
-            animateCounter(document.getElementById('onlineCount'), 342, 2000);
-            animateCounter(document.getElementById('runCount'), 985632, 3000);
-        }, 500);
-
-        // Button Effects
-        const copyBtn = document.getElementById('copyBtn');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const copyToast = document.getElementById('copyToast');
-
-        copyBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            
-            copyBtn.classList.add('clicked');
-            setTimeout(() => copyBtn.classList.remove('clicked'), 600);
-
-            const code = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/Wbw1470619303-ctrl/w-/refs/heads/main/wutou_w"))()';
-
-            navigator.clipboard.writeText(code).then(() => {
-                copyToast.classList.add('show');
-                setTimeout(() => copyToast.classList.remove('show'), 2000);
-            }).catch(err => {
-                // Fallback for older browsers
-                const textarea = document.createElement('textarea');
-                textarea.value = code;
-                textarea.style.position = 'fixed';
-                textarea.style.opacity = '0';
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-                copyToast.classList.add('show');
-                setTimeout(() => copyToast.classList.remove('show'), 2000);
+            // 按钮波纹变量
+            document.querySelectorAll('.cyber-button').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const rect = btn.getBoundingClientRect();
+                    btn.style.setProperty('--x', (e.clientX - rect.left) + 'px');
+                    btn.style.setProperty('--y', (e.clientY - rect.top) + 'px');
+                    btn.classList.add('clicked');
+                    setTimeout(() => btn.classList.remove('clicked'), 600);
+                });
             });
-        });
 
-        downloadBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
+            // ---------- 模态框 & 复制逻辑 (优化版) ----------
+            const modal = document.getElementById('scriptModal');
+            const closeBtn = document.getElementById('closeModalBtn');
+            const copyMainBtn = document.getElementById('copyBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const modalCopyBtn = document.getElementById('modalCopyBtn');
             
-            downloadBtn.classList.add('clicked');
-            setTimeout(() => downloadBtn.classList.remove('clicked'), 600);
-
-            window.open('https://deltaexploits.gg/', '_blank');
-        });
-
-        // Button ripple effect on click position
-        document.querySelectorAll('.cyber-button').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const rect = btn.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
+            // 全局toast元素
+            const toastEl = document.getElementById('globalToast');
+            const toastIcon = document.getElementById('toastIcon');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            const SCRIPT_CODE = `loadstring(game:HttpGet("https://raw.githubusercontent.com/Wbw1470619303-ctrl/w-/refs/heads/main/wutou_w"))()`;
+            
+            // 显示toast (type: 'success' 或 'error')
+            function showToast(type, message) {
+                // 重置类
+                toastEl.classList.remove('show', 'error');
+                // 设置内容
+                toastMessage.textContent = message;
                 
-                btn.style.setProperty('--x', x + 'px');
-                btn.style.setProperty('--y', y + 'px');
-            });
-        });
+                if (type === 'error') {
+                    toastEl.classList.add('error');
+                    toastIcon.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>`;
+                } else {
+                    toastIcon.innerHTML = `<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>`;
+                }
+                
+                toastEl.classList.add('show');
+                setTimeout(() => {
+                    toastEl.classList.remove('show');
+                }, 2000);
+            }
 
-        // Periodic counter updates
-        setInterval(() => {
-            const onlineEl = document.getElementById('onlineCount');
-            const currentOnline = parseInt(onlineEl.textContent.replace(/,/g, ''));
-            const change = Math.floor(Math.random() * 10) - 3;
-            const newOnline = Math.max(100, currentOnline + change);
-            animateCounter(onlineEl, newOnline, 500);
-            onlineEl.classList.add('jumping');
-            setTimeout(() => onlineEl.classList.remove('jumping'), 300);
-        }, 5000);
+            // 核心复制函数
+            async function performCopy() {
+                try {
+                    await navigator.clipboard.writeText(SCRIPT_CODE);
+                    showToast('success', '复制成功');
+                    return true;
+                } catch (err) {
+                    // 降级方案
+                    try {
+                        const textarea = document.createElement('textarea');
+                        textarea.value = SCRIPT_CODE;
+                        textarea.style.position = 'fixed';
+                        textarea.style.opacity = '0';
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        const successful = document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                        if (successful) {
+                            showToast('success', '复制成功');
+                            return true;
+                        } else {
+                            throw new Error('execCommand failed');
+                        }
+                    } catch (fallbackErr) {
+                        console.warn('复制失败: ', fallbackErr);
+                        showToast('error', '复制失败，请手动复制');
+                        return false;
+                    }
+                }
+            }
+
+            // 打开模态框
+            function openModal() {
+                modal.classList.add('show');
+                document.body.classList.add('modal-open');
+            }
+            function closeModal() {
+                modal.classList.remove('show');
+                document.body.classList.remove('modal-open');
+            }
+
+            // 主按钮「脚本」打开模态框
+            copyMainBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openModal();
+            });
+
+            // 下载注入器
+            downloadBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                window.open('https://deltaexploits.gg/', '_blank');
+            });
+
+            // 模态框内「复制脚本」
+            modalCopyBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                await performCopy();
+            });
+
+            // 关闭模态框
+            closeBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modal.classList.contains('show')) closeModal();
+            });
+
+            // 防止模态框内容点击关闭冒泡
+            document.querySelector('.modal-container').addEventListener('click', (e) => e.stopPropagation());
+
+            // 在线人数动态微调
+            setInterval(() => {
+                const onlineEl = document.getElementById('onlineCount');
+                if (!onlineEl) return;
+                const cur = parseInt(onlineEl.textContent.replace(/,/g, '')) || 342;
+                const change = Math.floor(Math.random() * 10) - 3;
+                const next = Math.max(100, cur + change);
+                animateCounter(onlineEl, next, 500);
+                onlineEl.classList.add('jumping');
+                setTimeout(() => onlineEl.classList.remove('jumping'), 300);
+            }, 5000);
+        })();
     </script>
 </body>
 </html>
